@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     findings: list[Finding] = []
     notes: list[str] = []
     for cat in project.catalogs:
-        f, n = run_catalog_rules(project, cat, scans)
+        f, n = run_catalog_rules(project, cat, scans, naming=cfg.naming)
         findings += f
         notes += n
     findings += run_global_rules(project, scans)

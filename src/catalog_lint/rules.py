@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -12,6 +13,7 @@ ERROR, WARNING, INFO = "error", "warning", "info"
 SEVERITY_RANK = {INFO: 0, WARNING: 1, ERROR: 2}
 
 RULES: dict[str, tuple[str, str]] = {
+    "naming-convention": (INFO, "Opt-in alias naming style and reserved-name checks."),
     "unused-library": (WARNING, "Library alias is never referenced by any build script."),
     "unused-plugin": (WARNING, "Plugin alias is never referenced by any build script."),
     "unused-version": (WARNING, "Version is not used by any live library, plugin or script."),
@@ -122,7 +124,7 @@ def _loc(catalog: Catalog, e: Entry) -> tuple[Path, int]:
 
 
 def run_catalog_rules(
-    project: Project, catalog: Catalog, scans: dict[Path, FileScan]
+    project: Project, catalog: Catalog, scans: dict[Path, FileScan], *, naming: str | None = None
 ) -> tuple[list[Finding], list[str]]:
     findings: list[Finding] = []
     notes: list[str] = []
@@ -146,6 +148,22 @@ def run_catalog_rules(
 
     libs, plugins = catalog.entries["library"], catalog.entries["plugin"]
     versions, bundles = catalog.entries["version"], catalog.entries["bundle"]
+
+    # Opt-in only: aliases affect generated accessors, so never rename them automatically.
+    if naming is not None:
+        patterns = {
+            "kebab": r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*",
+            "snake": r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*",
+            "camel": r"[a-z][A-Za-z0-9]*",
+        }
+        for e in catalog.all_entries():
+            segments = e.accessor.split(".")
+            reserved = e.accessor in {"extensions", "convention"} or "class" in segments
+            reserved = reserved or (e.kind == "library" and segments[0] in {"bundles", "versions", "plugins"})
+            if reserved:
+                add("naming-convention", e, f"{e.kind} '{e.alias}' uses a Gradle reserved alias segment")
+            elif re.fullmatch(patterns[naming], e.alias) is None:
+                add("naming-convention", e, f"{e.kind} '{e.alias}' does not follow {naming} naming")
 
     # --- structural errors -------------------------------------------------- #
     for e in list(libs.values()) + list(plugins.values()):

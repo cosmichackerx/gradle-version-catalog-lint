@@ -4,6 +4,11 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Opt-in `naming-convention` info rule, configured with `naming = "kebab"`, `"camel"`, or `"snake"`. Checks styles and Gradle reserved segments without auto-fixes.
+
 ## [0.1.1] - 2026-10-02
 
 Robustness release: Windows/CRLF/BOM handling and several correctness fixes. CI now runs on Ubuntu, Windows and macOS.
