@@ -209,7 +209,7 @@ The analysis is static. Be aware of:
 - Only top-level `[versions]`, `[libraries]`, `[plugins]` and `[bundles]` tables are understood; programmatic
   `versionCatalogs { library(...) }` declarations in `settings.gradle` are not linted.
 - Always review `--fix --dry-run` first and commit before running `--fix`.
-- Developed and tested on Linux; Windows/macOS should work (pure Python, no native code) but are not in CI yet.
+- Developed and tested across Linux, macOS, and Windows.
 
 ## Development
 
@@ -228,7 +228,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues are labelled
 - [ ] `unused-version` support for versions injected through `settings.gradle` `version("x", "…")`
 - [ ] Lint `settings.gradle(.kts)` programmatic catalogs
 - [ ] Rule: alias naming conventions (camelCase vs kebab-case consistency, reserved prefixes)
-- [ ] Windows and macOS in the CI matrix
+- [x] Windows and macOS in the CI matrix
 - [ ] Publish to PyPI (`pipx install gradle-catalog-lint`)
 - [ ] SARIF `fixes` so code scanning can suggest the deletion
 
