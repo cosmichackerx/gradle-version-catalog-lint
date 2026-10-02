@@ -81,3 +81,5 @@ def test_exclude_globs(make_project):
     )
     proj = discover([root], ["samples/*"])
     assert [f.name for f in proj.files] == ["build.gradle.kts"]
+    proj_backslashes = discover([root], ["samples\\*"])
+    assert [f.name for f in proj_backslashes.files] == ["build.gradle.kts"]
