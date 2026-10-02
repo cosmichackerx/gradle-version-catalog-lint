@@ -27,3 +27,10 @@ def test_branding():
 
 def test_is_composite():
     assert re.search(r"^runs:\s*\n\s+using:\s*['\"]?composite", ACTION, re.M)
+
+
+def test_description_is_valid_yaml_scalar():
+    raw = re.search(r"^description:\s*(.+)$", ACTION, re.M).group(1).strip()
+    # an unquoted ": " or " #" breaks the YAML mapping (the runner then fails with "Failed to load action.yml")
+    if not raw.startswith(("'", '"')):
+        assert ": " not in raw and " #" not in raw, "quote the description"

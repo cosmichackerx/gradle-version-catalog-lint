@@ -1,5 +1,5 @@
 name: Gradle Version Catalog Lint
-description: Lint Gradle version catalogs (libs.versions.toml): unused entries, dynamic/SNAPSHOT versions and hard-coded dependencies.
+description: "Lint Gradle version catalogs (libs.versions.toml): unused entries, dynamic/SNAPSHOT versions and hard-coded dependencies."
 author: cosmichackerx
 branding:
   icon: check-circle
