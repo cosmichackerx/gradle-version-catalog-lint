@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-10-02
+
+### Changed
+- `action.yml` is Marketplace-ready: description shortened to 121 characters (limit 125); a test checks name,
+  description length, branding and the composite `runs` block.
+
 ## [0.1.1] - 2026-10-02
 
 Robustness release: Windows/CRLF/BOM handling and several correctness fixes. CI now runs on Ubuntu, Windows and macOS.
@@ -49,5 +55,6 @@ First public release.
 - `.catalog-lint.toml` configuration and inline `# catalog-lint: ignore[=rule,...]` comments.
 - Composite GitHub Action (`action.yml`) and `.pre-commit-hooks.yaml`.
 
+[0.1.2]: https://github.com/cosmichackerx/gradle-version-catalog-lint/releases/tag/v0.1.2
 [0.1.1]: https://github.com/cosmichackerx/gradle-version-catalog-lint/releases/tag/v0.1.1
 [0.1.0]: https://github.com/cosmichackerx/gradle-version-catalog-lint/releases/tag/v0.1.0
