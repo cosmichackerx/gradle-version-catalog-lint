@@ -48,10 +48,10 @@ and `square/okhttp`'s catalog has 14 removable entries.
 
 ```bash
 # recommended: isolated install straight from the tagged release
-pipx install git+https://github.com/cosmichackerx/gradle-version-catalog-lint@v0.1.0
+pipx install git+https://github.com/cosmichackerx/gradle-version-catalog-lint@v0.1.1
 
 # or with pip
-pip install git+https://github.com/cosmichackerx/gradle-version-catalog-lint@v0.1.0
+pip install git+https://github.com/cosmichackerx/gradle-version-catalog-lint@v0.1.1
 ```
 
 Requires Python 3.11 or newer. Installs two equivalent commands: `catalog-lint` and `gradle-catalog-lint`.
@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: cosmichackerx/gradle-version-catalog-lint@v0.1.0
+      - uses: cosmichackerx/gradle-version-catalog-lint@v0.1.1
         with:
           fail-on: warning      # error | warning | info | never
 ```
@@ -132,7 +132,7 @@ jobs:
 Findings show up as inline annotations on the PR. For GitHub code scanning:
 
 ```yaml
-      - uses: cosmichackerx/gradle-version-catalog-lint@v0.1.0
+      - uses: cosmichackerx/gradle-version-catalog-lint@v0.1.1
         with:
           format: sarif
           output-file: catalog-lint.sarif
@@ -147,7 +147,7 @@ Findings show up as inline annotations on the PR. For GitHub code scanning:
 ```yaml
 repos:
   - repo: https://github.com/cosmichackerx/gradle-version-catalog-lint
-    rev: v0.1.0
+    rev: v0.1.1
     hooks:
       - id: catalog-lint
 ```
@@ -209,7 +209,8 @@ The analysis is static. Be aware of:
 - Only top-level `[versions]`, `[libraries]`, `[plugins]` and `[bundles]` tables are understood; programmatic
   `versionCatalogs { library(...) }` declarations in `settings.gradle` are not linted.
 - Always review `--fix --dry-run` first and commit before running `--fix`.
-- Developed and tested on Linux; Windows/macOS should work (pure Python, no native code) but are not in CI yet.
+- Tested in CI on Linux, Windows and macOS (Python 3.11-3.13). Catalogs with CRLF line endings or a UTF-8 BOM are
+  supported, and `--fix` preserves the file's original line endings.
 
 ## Development
 
@@ -228,7 +229,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues are labelled
 - [ ] `unused-version` support for versions injected through `settings.gradle` `version("x", "…")`
 - [ ] Lint `settings.gradle(.kts)` programmatic catalogs
 - [ ] Rule: alias naming conventions (camelCase vs kebab-case consistency, reserved prefixes)
-- [ ] Windows and macOS in the CI matrix
+- [x] Windows and macOS in the CI matrix
 - [ ] Publish to PyPI (`pipx install gradle-catalog-lint`)
 - [ ] SARIF `fixes` so code scanning can suggest the deletion
 

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import sys
 from pathlib import Path
 
 from . import __version__
-from .catalog import CatalogError
+from .catalog import Catalog, CatalogError
 from .config import CONFIG_NAME, Config, ConfigError, load_config
 from .fixer import remove_entries, unified_diff
 from .report import _rel, render_github, render_json, render_sarif, render_text
@@ -45,7 +46,17 @@ def _fail(msg: str) -> int:
     return EXIT_USAGE
 
 
+def _make_output_robust() -> None:
+    """Never crash on aliases/paths the console encoding cannot represent (e.g. cp1252 on Windows)."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            with contextlib.suppress(OSError, ValueError):
+                reconfigure(errors="replace")
+
+
 def main(argv: list[str] | None = None) -> int:
+    _make_output_robust()
     args = build_parser().parse_args(argv)
 
     if args.list_rules:
@@ -102,18 +113,22 @@ def main(argv: list[str] | None = None) -> int:
     findings = sorted(uniq.values(), key=lambda f: (str(f.file), f.line, f.rule))
 
     if args.fix:
+        # Compute every fix first so a failure leaves all files untouched.
+        planned: list[tuple[Catalog, str, int]] = []
         for cat in project.catalogs:
             try:
                 new_text, removed = remove_entries(cat, findings)
             except CatalogError as exc:
                 return _fail(str(exc))
-            if not removed:
-                continue
+            if removed:
+                planned.append((cat, new_text, removed))
+        for cat, new_text, removed in planned:
             label = _rel(cat.path, project.base)
             if args.dry_run:
                 print(unified_diff(cat.path, cat.text, new_text, label))
             else:
-                cat.path.write_text(new_text, encoding="utf-8")
+                # bytes: keep CRLF/LF exactly as found and keep a UTF-8 BOM if there was one
+                cat.path.write_bytes((b"\xef\xbb\xbf" if cat.bom else b"") + new_text.encode("utf-8"))
                 print(f"fixed {label}: removed {removed} unused entr{'y' if removed == 1 else 'ies'}",
                       file=sys.stderr)  # fmt: skip
         if not args.dry_run:
@@ -137,6 +152,8 @@ def main(argv: list[str] | None = None) -> int:
         print(out)
 
     threshold = args.fail_on or cfg.fail_on or "warning"
+    if project.errors and threshold != "never":
+        return EXIT_USAGE  # an unreadable catalog must never look like a clean run
     if threshold != "never" and any(SEVERITY_RANK[f.severity] >= SEVERITY_RANK[threshold] for f in findings):
         return EXIT_FINDINGS
     return EXIT_OK

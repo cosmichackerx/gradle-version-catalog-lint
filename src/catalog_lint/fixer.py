@@ -6,7 +6,7 @@ import difflib
 import tomllib
 from pathlib import Path
 
-from .catalog import Catalog, CatalogError
+from .catalog import Catalog, CatalogError, split_lines
 from .rules import Finding
 
 
@@ -20,7 +20,7 @@ def remove_entries(catalog: Catalog, findings: list[Finding]) -> tuple[str, int]
     doomed: set[tuple[str, str]] = {
         (f.kind, f.alias) for f in findings if f.fixable and f.file == catalog.path and f.kind and f.alias
     }
-    lines = catalog.text.splitlines(keepends=True)
+    lines = split_lines(catalog.text, keepends=True)
     drop: set[int] = set()
     removed = 0
     for kind, alias in doomed:
@@ -33,7 +33,7 @@ def remove_entries(catalog: Catalog, findings: list[Finding]) -> tuple[str, int]
     new_lines = [ln for i, ln in enumerate(lines) if i not in drop]
     new_text = "".join(new_lines)
     if new_text and not new_text.endswith("\n"):
-        new_text += "\n"
+        new_text += catalog.newline
     try:
         data = tomllib.loads(new_text)
     except tomllib.TOMLDecodeError as exc:
@@ -48,7 +48,7 @@ def remove_entries(catalog: Catalog, findings: list[Finding]) -> tuple[str, int]
 def unified_diff(path: Path, old: str, new: str, label: str) -> str:
     return "".join(
         difflib.unified_diff(
-            old.splitlines(keepends=True), new.splitlines(keepends=True),
+            split_lines(old, keepends=True), split_lines(new, keepends=True),
             fromfile=f"a/{label}", tofile=f"b/{label}",
         )
     )  # fmt: skip

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from urllib.parse import quote
 
 from . import __version__
 from .rules import RULES, Finding
@@ -65,10 +66,14 @@ def _gh_escape(s: str) -> str:
     return s.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
 
 
+def _gh_escape_property(s: str) -> str:
+    return _gh_escape(s).replace(":", "%3A").replace(",", "%2C")
+
+
 def render_github(findings: list[Finding], base: Path) -> str:
     level = {"error": "error", "warning": "warning", "info": "notice"}
     return "\n".join(
-        f"::{level[f.severity]} file={_rel(f.file, base)},line={f.line},title={f.rule}::"
+        f"::{level[f.severity]} file={_gh_escape_property(_rel(f.file, base))},line={f.line},title={f.rule}::"
         f"{_gh_escape(f.message)}"
         for f in findings
     )
@@ -93,7 +98,7 @@ def render_sarif(findings: list[Finding], base: Path) -> str:
             "locations": [
                 {
                     "physicalLocation": {
-                        "artifactLocation": {"uri": _rel(f.file, base)},
+                        "artifactLocation": {"uri": quote(_rel(f.file, base))},
                         "region": {"startLine": f.line},
                     }
                 }

@@ -57,8 +57,9 @@ class Entry:
 class Catalog:
     path: Path
     names: list[str]
-    text: str
+    text: str  # exact file contents (line endings preserved, BOM removed)
     entries: dict[str, dict[str, Entry]]
+    bom: bool = False  # the file started with a UTF-8 byte order mark
 
     @property
     def name(self) -> str:
@@ -67,8 +68,29 @@ class Catalog:
     def get(self, kind: str, alias: str) -> Entry | None:
         return self.entries[kind].get(alias)
 
+    @property
+    def newline(self) -> str:
+        return "\r\n" if "\r\n" in self.text else "\n"
+
     def all_entries(self) -> list[Entry]:
         return [e for kind in KIND_OF_SECTION.values() for e in self.entries[kind].values()]
+
+
+def split_lines(text: str, keepends: bool = False) -> list[str]:
+    """Split on ``\\n`` / ``\\r\\n`` only (``str.splitlines`` also breaks on U+2028, form feeds, ...).
+
+    TOML defines a newline as LF or CRLF, so editors, ``tomllib`` and this tool must agree on it.
+    """
+    lines = re.findall(r"[^\n]*\n|[^\n]+", text)
+    return lines if keepends else [ln.removesuffix("\n").removesuffix("\r") for ln in lines]
+
+
+def read_toml_text(path: Path) -> tuple[str, bool]:
+    """Read a TOML file as UTF-8 without translating newlines; returns ``(text, had_bom)``."""
+    text = path.read_bytes().decode("utf-8")
+    if text.startswith("\ufeff"):
+        return text[1:], True
+    return text, False
 
 
 def normalize(alias: str) -> str:
@@ -205,7 +227,7 @@ def _comment_ignores(line: str) -> set[str]:
 
 def parse_catalog(path: Path, names: list[str] | None = None) -> Catalog:
     try:
-        text = path.read_text(encoding="utf-8")
+        text, bom = read_toml_text(path)
     except (OSError, UnicodeDecodeError) as exc:
         raise CatalogError(path, f"cannot read file: {exc}") from exc
     try:
@@ -217,10 +239,11 @@ def parse_catalog(path: Path, names: list[str] | None = None) -> Catalog:
         if section in data and not isinstance(data[section], dict):
             raise CatalogError(path, f"[{section}] must be a table")
 
-    lines = text.splitlines()
+    lines = split_lines(text)
     boundaries: list[tuple[int, str | None, str | None]] = []  # (line idx, section, alias)
     section: str | None = None
     depth = 0
+    in_alias_table = False  # inside ``[libraries.foo]``: its keys belong to ``foo``, not to new aliases
     for idx, line in enumerate(lines):
         if depth == 0:
             stripped = line.strip()
@@ -231,7 +254,10 @@ def parse_catalog(path: Path, names: list[str] | None = None) -> Catalog:
                 alias = None
                 if section and len(parts) > 1:
                     alias = _resolve_alias(".".join(parts[1:]), data.get(section, {}))
+                in_alias_table = alias is not None
                 boundaries.append((idx, section, alias))
+            elif in_alias_table:
+                pass
             elif section and (m := _KEY_RE.match(line)):
                 raw = m.group(1) or m.group(2) or m.group(3)
                 alias = _resolve_alias(raw, data.get(section, {}))
@@ -263,4 +289,4 @@ def parse_catalog(path: Path, names: list[str] | None = None) -> Catalog:
             kind = KIND_OF_SECTION[sec]
             entries[kind][alias] = Entry(kind, alias, value, sp, ignored)
 
-    return Catalog(path=path, names=names or [default_name(path)], text=text, entries=entries)
+    return Catalog(path=path, names=names or [default_name(path)], text=text, entries=entries, bom=bom)

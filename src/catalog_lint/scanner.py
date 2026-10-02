@@ -140,7 +140,8 @@ def project_root_of(toml: Path) -> Path:
 def discover(paths: list[Path], exclude: list[str] | None = None) -> Project:
     import fnmatch
 
-    exclude = exclude or []
+    # accept Windows-style separators and a leading "./" in exclude globs
+    exclude = [e.replace("\\", "/").removeprefix("./") for e in (exclude or [])]
     base = (paths[0] if paths[0].is_dir() else paths[0].parent).resolve()
     tomls: list[Path] = []
     files: list[Path] = []

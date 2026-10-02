@@ -45,7 +45,7 @@ def _str_list(data: dict, key: str, path: Path) -> list[str]:
 
 def load_config(path: Path) -> Config:
     try:
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
     except OSError as exc:
         raise ConfigError(f"cannot read config {path}: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:
