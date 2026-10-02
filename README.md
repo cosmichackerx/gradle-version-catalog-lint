@@ -48,10 +48,10 @@ and `square/okhttp`'s catalog has 14 removable entries.
 
 ```bash
 # recommended: isolated install straight from the tagged release
-pipx install git+https://github.com/cosmichackerx/gradle-version-catalog-lint@v0.1.2
+pipx install git+https://github.com/cosmichackerx/gradle-version-catalog-lint@v0.1.3
 
 # or with pip
-pip install git+https://github.com/cosmichackerx/gradle-version-catalog-lint@v0.1.2
+pip install git+https://github.com/cosmichackerx/gradle-version-catalog-lint@v0.1.3
 ```
 
 Requires Python 3.11 or newer. Installs two equivalent commands: `catalog-lint` and `gradle-catalog-lint`.
@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: cosmichackerx/gradle-version-catalog-lint@v0.1.2
+      - uses: cosmichackerx/gradle-version-catalog-lint@v0.1.3
         with:
           fail-on: warning      # error | warning | info | never
 ```
@@ -132,7 +132,7 @@ jobs:
 Findings show up as inline annotations on the PR. For GitHub code scanning:
 
 ```yaml
-      - uses: cosmichackerx/gradle-version-catalog-lint@v0.1.2
+      - uses: cosmichackerx/gradle-version-catalog-lint@v0.1.3
         with:
           format: sarif
           output-file: catalog-lint.sarif
@@ -147,7 +147,7 @@ Findings show up as inline annotations on the PR. For GitHub code scanning:
 ```yaml
 repos:
   - repo: https://github.com/cosmichackerx/gradle-version-catalog-lint
-    rev: v0.1.2
+    rev: v0.1.3
     hooks:
       - id: catalog-lint
 ```

@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-10-02
+
+### Changed
+- `action.yml` and CI now use `actions/setup-python` v6.3.0 (declares `node24`); v5 declared `node20`, which GitHub Actions
+  no longer provides (found with [node24-ready](https://github.com/cosmichackerx/node24-ready)). CI has a new job that checks
+  the repository's own workflows with that tool.
+
 ## [0.1.2] - 2026-10-02
 
 ### Changed
