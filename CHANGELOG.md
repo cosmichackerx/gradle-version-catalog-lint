@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-10-03
+
+### Changed
+- Maintenance release, no change in what the linter reports. The action and CI now use `actions/setup-python` 7.0.0 and
+  `actions/checkout` 7.0.1 (both pinned by commit SHA), a `dependabot.yml` keeps them current, and CI runs
+  `dependabot-gaps` in pull request mode.
+
 ## [0.1.3] - 2026-10-02
 
 ### Changed
