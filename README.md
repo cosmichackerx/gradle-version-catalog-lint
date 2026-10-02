@@ -154,8 +154,11 @@ repos:
 
 ## Rules
 
+Alias style checks are opt-in: set `naming = "kebab"` (or `"camel"`, `"snake"`) in `.catalog-lint.toml`. Single lowercase words fit every style. The rule checks all entry kinds, reports Gradle reserved segments, and never renames aliases automatically. `bundles`, `versions`, and `plugins` are reserved first segments only for libraries. Use ignore comments or config suppression for deliberate exceptions.
+
 | Rule | Severity | Fixable | What it catches |
 |---|---|---|---|
+| `naming-convention` | info | | Opt-in naming style and Gradle reserved segments; never auto-fixed |
 | `unused-library` | warning | ✅ | library alias never referenced by a script (directly or through a used bundle) |
 | `unused-plugin` | warning | ✅ | plugin alias never referenced (`alias(libs.plugins.x)`) |
 | `unused-version` | warning | ✅ | `[versions]` entry not used by any live library/plugin nor by a script (`libs.versions.x.get()`) |
@@ -228,7 +231,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues are labelled
 - [ ] Optional `--check-updates`: report catalog versions that are outdated or very fresh (dependency cooldown)
 - [ ] `unused-version` support for versions injected through `settings.gradle` `version("x", "…")`
 - [ ] Lint `settings.gradle(.kts)` programmatic catalogs
-- [ ] Rule: alias naming conventions (camelCase vs kebab-case consistency, reserved prefixes)
+- [x] Rule: alias naming conventions (camelCase vs kebab-case consistency, reserved prefixes)
 - [x] Windows and macOS in the CI matrix
 - [ ] Publish to PyPI (`pipx install gradle-catalog-lint`)
 - [ ] SARIF `fixes` so code scanning can suggest the deletion

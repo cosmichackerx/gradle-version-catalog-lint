@@ -22,6 +22,7 @@ class Config:
     ignore: list[str] = field(default_factory=list)  # "alias" or "kind:alias" globs
     exclude: list[str] = field(default_factory=list)
     fail_on: str | None = None
+    naming: str | None = None
 
     def ignored(self, kind: str | None, alias: str | None) -> bool:
         if alias is None:
@@ -50,7 +51,7 @@ def load_config(path: Path) -> Config:
         raise ConfigError(f"cannot read config {path}: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:
         raise ConfigError(f"{path}: invalid TOML: {exc}") from exc
-    unknown = set(data) - {"disable", "ignore", "exclude", "fail-on"}
+    unknown = set(data) - {"disable", "ignore", "exclude", "fail-on", "naming"}
     if unknown:
         raise ConfigError(f"{path}: unknown option(s): {', '.join(sorted(unknown))}")
     disable = set(_str_list(data, "disable", path))
@@ -60,4 +61,7 @@ def load_config(path: Path) -> Config:
     fail_on = data.get("fail-on")
     if fail_on is not None and fail_on not in (*SEVERITY_RANK, "never"):
         raise ConfigError(f"{path}: 'fail-on' must be one of error, warning, info, never")
-    return Config(disable, _str_list(data, "ignore", path), _str_list(data, "exclude", path), fail_on)
+    naming = data.get("naming")
+    if naming is not None and naming not in ("kebab", "camel", "snake"):
+        raise ConfigError(f"{path}: 'naming' must be one of kebab, camel, snake")
+    return Config(disable, _str_list(data, "ignore", path), _str_list(data, "exclude", path), fail_on, naming)

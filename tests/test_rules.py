@@ -2,12 +2,12 @@ from catalog_lint.rules import run_catalog_rules, run_global_rules
 from catalog_lint.scanner import discover, scan_files
 
 
-def lint(root):
+def lint(root, naming=None):
     proj = discover([root])
     scans = scan_files(proj)
     findings, notes = [], []
     for c in proj.catalogs:
-        f, n = run_catalog_rules(proj, c, scans)
+        f, n = run_catalog_rules(proj, c, scans, naming=naming)
         findings += f
         notes += n
     findings += run_global_rules(proj, scans)
@@ -267,3 +267,69 @@ def test_nested_build_with_own_catalog_is_separate(make_project):
     )
     findings, _ = lint(root)
     assert findings == []
+
+
+def test_opt_in_naming_styles_and_ignores(make_project):
+    root = make_project(
+        {
+            **BASE,
+            "gradle/libs.versions.toml": """
+        [versions]
+        BadVersion = "1"
+        [libraries]
+        good-name = "g:good:1"
+        camelName = "g:camel:1"
+        snake_name = "g:snake:1"
+        IgnoredName = "g:ignored:1" # catalog-lint: ignore=naming-convention
+        [bundles]
+        BadBundle = ["good-name"]
+        [plugins]
+        BadPlugin = { id = "g.plugin", version = "1" }
+    """,
+        }
+    )
+    assert not any(f.rule == "naming-convention" for f in lint(root)[0])
+    for style, good in [("kebab", "good-name"), ("camel", "camelName"), ("snake", "snake_name")]:
+        findings = [f for f in lint(root, style)[0] if f.rule == "naming-convention"]
+        assert {f.alias for f in findings} == {
+            "BadVersion",
+            "BadBundle",
+            "BadPlugin",
+            "good-name",
+            "camelName",
+            "snake_name",
+        } - {good}
+        assert all(f.severity == "info" and not f.fixable for f in findings)
+
+
+def test_naming_respects_gradle_reserved_segments(make_project):
+    root = make_project(
+        {
+            **BASE,
+            "gradle/libs.versions.toml": """
+        [versions]
+        versions-ok = "1"
+        [libraries]
+        versions-bad = "g:v:1"
+        bundles-bad = "g:b:1"
+        plugins-bad = "g:p:1"
+        foo-class-bar = "g:c:1"
+        foo-extensions = "g:ext:1"
+        convention-plugin = "g:convplugin:1"
+        extensions = "g:e:1"
+        convention = "g:conv:1"
+        [plugins]
+        plugins-ok = { id = "g.plugin", version = "1" }
+    """,
+        }
+    )
+    findings = [f for f in lint(root, "kebab")[0] if f.rule == "naming-convention"]
+    assert {f.alias for f in findings} == {
+        "versions-bad",
+        "bundles-bad",
+        "plugins-bad",
+        "foo-class-bar",
+        "extensions",
+        "convention",
+    }
+    assert all("reserved" in f.message for f in findings)
