@@ -1,0 +1,5 @@
+{
+  "claims": [
+    {"id": "version pins in the README equal the newest release", "file": "README.md", "regex": "gradle-version-catalog-lint@v([0-9.]+)", "expect": {"latest_tag": "https://github.com/cosmichackerx/gradle-version-catalog-lint"}}
+  ]
+}

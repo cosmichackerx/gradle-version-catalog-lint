@@ -42,3 +42,4 @@ Small, focused PRs with a clear description. Conventional-commit-style prefixes 
 `docs:`, `test:`, `ci:`) are appreciated but not required.
 
 By contributing you agree that your contribution is licensed under the MIT License.
+* Releasing: bump the version and the README pins in a PR, merge when green, then run **Actions > Release gate** with the new tag (for example `v1.2.3`) *before* you create the tag. The same check runs again on the tag, and a weekly job (`claims-latest.yml`) fails when the README pins an older release than the newest tag.
