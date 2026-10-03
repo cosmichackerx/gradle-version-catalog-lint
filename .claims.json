@@ -1,0 +1,5 @@
+{
+  "claims": [
+    {"id": "version pins in the README", "file": "README.md", "regex": "gradle-version-catalog-lint@v([0-9.]+)", "expect": {"file": "src/catalog_lint/__init__.py", "regex": "^__version__ = \"([0-9.]+)\""}}
+  ]
+}
