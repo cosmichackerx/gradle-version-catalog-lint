@@ -29,7 +29,8 @@ multi-module Android projects, and plugs into GitHub Actions (annotations + SARI
 On real projects it finds real problems: running it on a fresh clone of
 [`android/nowinandroid`](https://github.com/android/nowinandroid) reports unused entries
 (`kotlinx-coroutines-android`, `androidx-dataStore-core`, an orphaned `retrofitKotlinxSerializationJson` version) —
-and `square/okhttp`'s catalog has 14 removable entries.
+An [OkHttp audit](#troubleshooting-a-real-world-audit) also shows why unused findings must be reviewed:
+wrapper functions around catalog lookups can make live entries look unused.
 
 ## Features
 
@@ -211,6 +212,42 @@ The analysis is static. Be aware of:
 - Always review `--fix --dry-run` first and commit before running `--fix`.
 - Tested in CI on Linux, Windows and macOS (Python 3.11-3.13). Catalogs with CRLF line endings or a UTF-8 BOM are
   supported, and `--fix` preserves the file's original line endings.
+
+## Troubleshooting: a real-world audit
+
+Using catalog-lint 0.1.1 against
+[OkHttp commit `406635f`](https://github.com/lysine-dev/okhttp/tree/406635f52301a6b4bf002740a18c1337c15b832d)
+with `catalog-lint path/to/okhttp --format json --fail-on never` reported **15 warnings**:
+six unused versions, six unused libraries, two unused plugins and one hard-coded dependency.
+This was a static audit; the Gradle build was not executed.
+
+Seven unused warnings were confirmed false positives. In
+[the quality convention plugin](https://github.com/lysine-dev/okhttp/blob/406635f52301a6b4bf002740a18c1337c15b832d/build-logic/src/main/kotlin/okhttp.quality-conventions.gradle.kts#L15-L18),
+`library(alias)` delegates to `libs.findLibrary(alias)` and `version(alias)` delegates to
+`libs.findVersion(alias)`. The call sites pass literal names, but the scanner does not trace arguments
+through these helpers:
+
+| Live alias | False-positive rules | Evidence |
+| --- | --- | --- |
+| `checkstyle` | `unused-library`, `unused-version` | Quality plugin lines 26 and 33 |
+| `codehaus-signature-java18` | `unused-library`, `unused-version` | Quality plugin line 79 |
+| `signature-android-apilevel21` | `unused-library`, `unused-version` | Quality plugin line 78 |
+| `kotlinCoreLibrariesVersion` | `unused-version` | [JVM convention plugin line 27](https://github.com/lysine-dev/okhttp/blob/406635f52301a6b4bf002740a18c1337c15b832d/build-logic/src/main/kotlin/okhttp.jvm-conventions.gradle.kts#L27) |
+
+The other eight warnings were **not validated**; this report is not a list of entries safe to delete.
+Direct literal lookups are supported; indirect lookups through helper parameters are the limitation here.
+
+For an entry you have verified is used, suppress just the relevant unused rule, for example:
+
+```toml
+[libraries]
+# catalog-lint: ignore=unused-library
+checkstyle = { module = "com.puppycrawl.tools:checkstyle", version.ref = "checkstyle" }
+```
+
+Suppress its separate `unused-version` finding on the version entry if necessary, or use a targeted
+`.catalog-lint.toml` ignore such as `library:checkstyle` and `version:checkstyle`.
+Keep unrelated warnings enabled. Review `--fix --dry-run` and keep a clean commit before applying any deletion.
 
 ## Development
 

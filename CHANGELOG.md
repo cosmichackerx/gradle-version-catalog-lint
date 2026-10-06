@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* README troubleshooting audit of OkHttp, with confirmed indirect-lookup false positives and targeted suppressions.
+
 * CI: the version pins in the README are checked against the package version by [claims-check](https://github.com/cosmichackerx/claims-check) (`.claims.json`). The first run found nothing stale.
 
 All notable changes to this project are documented here.
